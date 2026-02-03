@@ -6,6 +6,7 @@
 export type RootStackParamList = {
   Map: undefined;
   List: undefined;
+  RestaurantDetail: { restaurantId: string };
 };
 
 /**
