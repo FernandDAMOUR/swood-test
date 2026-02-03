@@ -41,8 +41,6 @@ export const RestaurantProvider: React.FC<RestaurantProviderProps> = ({ children
     
     try {
       restaurantStore.setLoading(true);
-
-      // Demander la permission de localisation
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         restaurantStore.setError("Permission de localisation refusée");
@@ -60,9 +58,7 @@ export const RestaurantProvider: React.FC<RestaurantProviderProps> = ({ children
       const { latitude, longitude } = currentLocation.coords;
       const radius = 1000; // 1km
 
-      // Vérifier si on doit utiliser le cache
       if (!forceRefresh) {
-        // Vérifier si le store a des données fraîches pour cette position
         if (
           restaurantStore.isFresh() &&
           !restaurantStore.hasLocationChanged(latitude, longitude)

@@ -115,7 +115,7 @@ export const saveLastLocation = async (latitude: number, longitude: number): Pro
   try {
     const location = { latitude, longitude, timestamp: Date.now() };
     await AsyncStorage.setItem(LAST_LOCATION_KEY, JSON.stringify(location));
-    console.log('[STORAGE_SERVICE] Localisation sauvegardée');
+    console.info('[STORAGE_SERVICE] Localisation sauvegardée');
   } catch (error) {
     console.error('[STORAGE_SERVICE] Erreur lors de la sauvegarde de la localisation:', error);
   }
