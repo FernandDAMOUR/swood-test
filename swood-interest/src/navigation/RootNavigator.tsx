@@ -1,18 +1,75 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
 // Import des écrans
 import { MapScreen } from '../screens/MapScreen';
 import { ListScreen } from '../screens/ListScreen';
+import { RestaurantDetailScreen } from '../screens/RestaurantDetailScreen';
 
-const Tab = createBottomTabNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/**
- * RootNavigator - Configuration principale de la navigation
- * Utilise une Bottom Tab Navigation pour basculer entre Map et List
- */
+// Stack pour la Carte
+const MapStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Map"
+        component={MapScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RestaurantDetail"
+        component={RestaurantDetailScreen}
+        options={{
+          headerTitle: 'Détails du restaurant',
+          headerStyle: {
+            backgroundColor: '#4CAF50',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+// Stack pour la Liste
+const ListStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="List"
+        component={ListScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RestaurantDetail"
+        component={RestaurantDetailScreen}
+        options={{
+          headerTitle: 'Détails du restaurant',
+          headerStyle: {
+            backgroundColor: '#2196F3',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 export const RootNavigator = () => {
   return (
     <Tab.Navigator
@@ -43,7 +100,7 @@ export const RootNavigator = () => {
     >
       <Tab.Screen
         name="Map"
-        component={MapScreen}
+        component={MapStack}
         options={{
           title: 'Carte',
           headerTitle: '🗺️ Carte',
@@ -59,7 +116,7 @@ export const RootNavigator = () => {
 
       <Tab.Screen
         name="List"
-        component={ListScreen}
+        component={ListStack}
         options={{
           title: 'Liste',
           headerTitle: '📋 Liste',

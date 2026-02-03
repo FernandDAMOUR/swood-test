@@ -1,57 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  Alert,
+  TouchableOpacity,
 } from 'react-native';
-import * as Location from 'expo-location';
 import { useRestaurants } from '../hooks/useRestaurants';
+import { useFavorites } from '../hooks/useFavorites';
 
 export const ListScreen = () => {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { restaurants, loading, error } = useRestaurants();
+  const { isFav, toggleFavorite, favorites } = useFavorites();
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission de localisation refusée');
-        Alert.alert(
-          'Permission refusée',
-          'Nous avons besoin de votre permission pour accéder à votre localisation.'
-        );
-        return;
-      }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
-    })();
-  }, []);
-
-  const defaultRegion = {
-    latitude: 48.8566,
-    longitude: 2.3522,
-  };
-
-  const currentCoords = location
-    ? {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      }
-    : defaultRegion;
-
-  const { restaurants, loading, error } = useRestaurants(
-    currentCoords.latitude,
-    currentCoords.longitude,
-    1000
-  );
+  const displayedRestaurants = showFavoritesOnly ? favorites : restaurants;
 
   const renderRestaurantItem = ({ item }: { item: any }) => (
     <View style={styles.restaurantCard}>
-      <Text style={styles.restaurantName}>🍽️ {item.name}</Text>
+      <View style={styles.restaurantHeader}>
+        <Text style={styles.restaurantName}>🍽️ {item.name}</Text>
+        <TouchableOpacity 
+          style={styles.favoriteIcon}
+          onPress={() => toggleFavorite(item)}
+        >
+          <Text style={styles.favoriteIconText}>
+            {isFav(item.id) ? '❤️' : '🤍'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
       {item.cuisine && (
         <Text style={styles.restaurantDetail}>Type: {item.cuisine}</Text>
       )}
@@ -85,6 +64,21 @@ export const ListScreen = () => {
         )}
       </View>
 
+      {/* Bouton pour filtrer les favoris */}
+      <TouchableOpacity 
+        style={[
+          styles.filterButton,
+          showFavoritesOnly && styles.filterButtonActive
+        ]}
+        onPress={() => setShowFavoritesOnly(!showFavoritesOnly)}
+      >
+        <Text style={styles.filterButtonText}>
+          {showFavoritesOnly 
+            ? `❤️ Mes favoris (${favorites.length})` 
+            : `🤍 Tous les restaurants (${restaurants.length})`}
+        </Text>
+      </TouchableOpacity>
+
       {loading && (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#2196F3" />
@@ -98,15 +92,19 @@ export const ListScreen = () => {
         </View>
       )}
 
-      {!loading && restaurants.length === 0 && !error && (
+      {!loading && displayedRestaurants.length === 0 && !error && (
         <View style={styles.centerContainer}>
-          <Text style={styles.noDataText}>Aucun restaurant trouvé</Text>
+          <Text style={styles.noDataText}>
+            {showFavoritesOnly 
+              ? 'Aucun restaurant favori'
+              : 'Aucun restaurant trouvé'}
+          </Text>
         </View>
       )}
 
-      {!loading && restaurants.length > 0 && (
+      {!loading && displayedRestaurants.length > 0 && (
         <FlatList
-          data={restaurants}
+          data={displayedRestaurants}
           renderItem={renderRestaurantItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
@@ -136,6 +134,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#e3f2fd',
     marginTop: 5,
+  },
+  filterButton: {
+    margin: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    borderColor: '#FF6B6B',
+    backgroundColor: '#FFE8E8',
+  },
+  filterButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   centerContainer: {
     flex: 1,
@@ -179,11 +196,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  restaurantHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   restaurantName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    flex: 1,
+  },
+  favoriteIcon: {
+    padding: 8,
+    marginLeft: 10,
+  },
+  favoriteIconText: {
+    fontSize: 20,
   },
   restaurantDetail: {
     fontSize: 14,
